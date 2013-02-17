@@ -27,10 +27,7 @@ class jigoshop_shipping extends Jigoshop_Singleton {
     /** Constructor */
     protected function __construct() {
 
-		// this constructor is called on the 'init' hook with a priority of 0 (highest)
-		// this doesn't give shipping methods time to install themselves and load text domains
-		// allow translations to function by re-adding initializations to the 'init' hook with a default priority
-		self::add_action( 'init', 'shipping_inits' );
+		self::shipping_inits();
         if (self::get_options()->get_option('jigoshop_calc_shipping') != 'no') :
             self::$enabled = true;
         endif;
@@ -93,6 +90,15 @@ class jigoshop_shipping extends Jigoshop_Singleton {
 
         endif;
 
+		//throw error if there are no shipping methods
+		if ( empty( $_available_methods )) {
+			self::$shipping_error_message = __('Please enter your shipping destination to view shipping options.', 'jigoshop');
+			if ( self::get_options()->get_option('jigoshop_enable_shipping_calc') == 'no' && is_cart() ) {
+			self::$shipping_error_message .= __(' If the Shipping Calculator is not available here, you will need to advance to the Checkout to do this.','jigoshop');
+			}
+			self::$shipping_error_message .= __(' There may be no methods available for your destination and you should contact us for assistance.', 'jigoshop');
+		}
+		
         return $_available_methods;
     }
 
@@ -123,7 +129,7 @@ class jigoshop_shipping extends Jigoshop_Singleton {
 
             if ($method->id != 'local_pickup') : // don't let local_pickup be chosen automatically
                 if (!$method->has_error()) :
-                    $fee = $method->shipping_total;
+                    $fee = $method->get_cheapest_price(); // obtain cheapest price
                     if ($fee >= 0 && $fee < $_cheapest_fee || !is_numeric($_cheapest_fee)) :
                         $_cheapest_fee = $fee;
                         $_cheapest_method = $method->id;
@@ -162,6 +168,14 @@ class jigoshop_shipping extends Jigoshop_Singleton {
         
         return false;
     }
+	
+	public static function get_chosen_method_title() {
+		$_available_methods = self::get_available_shipping_methods();
+		
+		$chosen_method = self::get_chosen_method();
+		return $_available_methods[$chosen_method]->title;
+	}
+	
     /**
      * Calculate the shipping price
      *
@@ -208,9 +222,14 @@ class jigoshop_shipping extends Jigoshop_Singleton {
                 else :
                     // current jigoshop functionality
                     $_cheapest_method = self::get_cheapest_method($_available_methods, $tax);
-                    if ($calc_cheapest || !isset($_available_methods[$chosen_method])) :
-                        $chosen_method = $_cheapest_method;
-                    endif;
+					if (!$_cheapest_method) :
+						// there was an error, and if chosen method was in the session we want to reset that
+						$chosen_method = $_cheapest_method;
+					else :
+						if ($calc_cheapest || !isset($_available_methods[$chosen_method])) :
+							$chosen_method = $_cheapest_method;
+						endif;
+					endif;
                 endif;
 
                 if ($chosen_method) :
@@ -220,7 +239,7 @@ class jigoshop_shipping extends Jigoshop_Singleton {
 
                     self::$shipping_total = $_available_methods[$chosen_method]->get_selected_price( jigoshop_session::instance()->selected_rate_id );
                     self::$shipping_tax = $_available_methods[$chosen_method]->get_selected_tax( jigoshop_session::instance()->selected_rate_id );
-                    self::$shipping_label = $_available_methods[$chosen_method]->get_selected_service(jigoshop_session::instance()->selected_rate_id );
+	                self::$shipping_label = $_available_methods[$chosen_method]->get_selected_service(jigoshop_session::instance()->selected_rate_id );
 
                 endif;
 

@@ -376,7 +376,7 @@ a.button,
 button.button,
 input.button,
 #review_form #submit {
-  color: #fff !important;
+  color: #fff;
   background: #ff9c07;
   padding: 6px;
   line-height: 1em !important;
@@ -406,7 +406,7 @@ input.button:hover,
   float: none;
 }
 .button-alt {
-  color: #fff !important;
+  color: #fff;
   background: #069bcd;
   padding: 6px;
   line-height: 1em !important;
@@ -818,10 +818,12 @@ td.quantity,
 }
 .cart-collaterals .cart_totals h2 {
   text-align: left;
+  margin: 0;
   margin-left: 10px;
 }
 .cart-collaterals .cart_totals p {
   margin: 0 !important;
+  text-align: left;
 }
 .cart-collaterals .cart_totals table {
   border-collapse: separate;
@@ -1240,4 +1242,84 @@ dl.customization dd {
 input:-ms-input-placeholder {
   background: white;
   color: LightGray;
+}
+/* =Twenty Twelve
+-------------------------------------------------------------- */
+.jigoshop .site-content {
+  /*	width: 65.104166667%;  -- twenty-twelve default, not quite wide enough to have 4 columns on Shop */
+
+  width: 66%;
+}
+.jigoshop .site-content .cross-sells {
+  width: auto;
+}
+.jigoshop .site-content div.jigoshop_error,
+.jigoshop .site-content div.jigoshop_message {
+  padding: 15px 10px 15px 32px;
+}
+.jigoshop .site-content div.jigoshop_error a.button,
+.jigoshop .site-content div.jigoshop_message a.button {
+  margin-top: -4px;
+}
+.jigoshop .site-content input.qty {
+  border: 0;
+  border-radius: 0;
+}
+.jigoshop .site-content .quantity input.qty {
+  border: 1px solid #ccc;
+  width: 20px;
+  display: inline;
+  padding: 1px 5px 2px;
+  line-height: 1em;
+  vertical-align: middle;
+}
+.jigoshop .site-content .quantity input.plus,
+.jigoshop .site-content .quantity input.minus {
+  padding: 5px 4px 4px 4px;
+  vertical-align: middle;
+  line-height: 1em;
+  border: none;
+  width: 20px;
+  color: #fff !important;
+  cursor: pointer;
+}
+.jigoshop .site-content .quantity input.minus {
+  -webkit-border-top-left-radius: 5px;
+  -webkit-border-bottom-left-radius: 5px;
+  -moz-border-radius-topleft: 5px;
+  -moz-border-radius-bottomleft: 5px;
+  border-top-left-radius: 5px;
+  border-bottom-left-radius: 5px;
+  -webkit-border-top-right-radius: 0px;
+  -webkit-border-bottom-right-radius: 0px;
+  -moz-border-radius-topright: 0px;
+  -moz-border-radius-bottomright: 0px;
+  border-top-right-radius: 0px;
+  border-bottom-right-radius: 0px;
+}
+.jigoshop .site-content .quantity input.plus {
+  -webkit-border-top-right-radius: 5px;
+  -webkit-border-bottom-right-radius: 5px;
+  -moz-border-radius-topright: 5px;
+  -moz-border-radius-bottomright: 5px;
+  border-top-right-radius: 5px;
+  border-bottom-right-radius: 5px;
+  -webkit-border-top-left-radius: 0px;
+  -webkit-border-bottom-left-radius: 0px;
+  -moz-border-radius-topleft: 0px;
+  -moz-border-radius-bottomleft: 0px;
+  border-top-left-radius: 0px;
+  border-bottom-left-radius: 0px;
+}
+.jigoshop .site-content .quantity input.minus:hover,
+.jigoshop .site-content .quantity input.plus:hover {
+  background: #a9c146;
+}
+.site-content .cross-sells ul,
+.site-content .cross-sells li {
+  list-style: none outside !important;
+}
+.site-content .products ul,
+.site-content .products li {
+  list-style: none outside !important;
 }

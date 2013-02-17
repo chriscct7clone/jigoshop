@@ -2,7 +2,7 @@
 /**
  * Customer Class
  *
- * The JigoShop custoemr class handles storage of the current customer's data, such as location.
+ * The JigoShop customer class handles storage of the current customer's data, such as location.
  *
  * DISCLAIMER
  *
@@ -22,14 +22,26 @@ class jigoshop_customer extends Jigoshop_Singleton {
 	/** constructor */
 	protected function __construct() {
 
-		if (is_user_logged_in()) {
-			$country = get_user_meta( get_current_user_id(), 'billing-country', true );
-			$state = get_user_meta( get_current_user_id(), 'billing-state', true );
-			$postcode = get_user_meta( get_current_user_id(), 'billing-postcode', true );
-			$shipping_country = get_user_meta( get_current_user_id(), 'shipping-country', true );
-			$shipping_state    = get_user_meta( get_current_user_id(), 'shipping-state', true );
-			$shipping_postcode = get_user_meta( get_current_user_id(), 'shipping-postcode', true );
+		// update the customer if a user signs in
+		$this->add_action('wp_login', 'update_signed_in_customer', 10, 2);
+
+		// remove customer billing/shipping information
+		$this->add_action('wp_logout', 'update_signed_out_customer');
+
+		// if we don't check the status of the customer, we will constantly destroy what the customer
+		// has selected in their forms as pages get reloaded or refreshed.
+		if ( !isset( jigoshop_session::instance()->customer ) ) {
+			$this->set_default_customer();
 		}
+	}
+
+	/**
+	 * Provide a default value for the customer shipping/billing information. It
+	 * utilizes the base country information to set up the default values.
+	 *
+	 * @since 1.4.4
+	 */
+	private function set_default_customer() {
 
 		$default = self::get_options()->get_option('jigoshop_default_country');
 		if (strstr($default, ':')) {
@@ -42,20 +54,58 @@ class jigoshop_customer extends Jigoshop_Singleton {
 		}
 
 		jigoshop_session::instance()->customer = array(
-			'country'          => isset($country) ? $country : $dcountry,
-			'state'            => isset($state) ? $state : $dstate,
-			'postcode'         => isset($postcode) ? $postcode : '',
-			'shipping_country' => isset($shipping_country) ? $shipping_country : $dcountry,
-			'shipping_state'   => isset($shipping_state) ? $shipping_state : $dstate,
-			'shipping_postcode'=> isset($shipping_postcode) ? $shipping_postcode : ''
+			'country'          => $dcountry,
+			'state'            => $dstate,
+			'postcode'         => '',
+			'shipping_country' => $dcountry,
+			'shipping_state'   => $dstate,
+			'shipping_postcode'=> ''
 		);
+
 	}
-    
+
+	/**
+	 * remove the logged out user shipping information from the session once they log out
+	 *
+	 * @since 1.4.4
+	 */
+	public function update_signed_out_customer() {
+		unset(jigoshop_session::instance()->customer);
+		$this->set_default_customer();
+	}
+
+	/**
+	 * set the customer shipping and billing information from their saved data
+	 *
+	 * @param string $user_login - the user name of the customer logged in
+	 * @param user $user the user object from wp
+	 * @since 1.4.4
+	 */
+	public function update_signed_in_customer($user_login, $user) {
+
+		$country = get_user_meta( $user->ID, 'billing-country', true );
+		$state = get_user_meta( $user->ID, 'billing-state', true );
+		$postcode = get_user_meta( $user->ID, 'billing-postcode', true );
+		$shipping_country = get_user_meta( $user->ID, 'shipping-country', true );
+		$shipping_state    = get_user_meta( $user->ID, 'shipping-state', true );
+		$shipping_postcode = get_user_meta( $user->ID, 'shipping-postcode', true );
+
+		jigoshop_session::instance()->customer = array(
+			'country'          => $country,
+			'state'            => $state,
+			'postcode'         => $postcode,
+			'shipping_country' => $shipping_country,
+			'shipping_state'   => $shipping_state,
+			'shipping_postcode'=> $shipping_postcode
+		);
+
+	}
+
     /**
      * Find out if the customer should be taxed or not
      * @param boolean $shipable tells if the cart has shipable items, and therefore we should use
      * shipping country. Otherwise if not shippable items, we need to use the customer country.
-     * @return boolean true if customer is taxable, false otherwise 
+     * @return boolean true if customer is taxable, false otherwise
      * @since 1.4
      */
 	public static function is_taxable($shipable) {
@@ -63,10 +113,10 @@ class jigoshop_customer extends Jigoshop_Singleton {
 		if (self::get_options()->get_option('jigoshop_calc_taxes') == 'no') {
 			return false;
 		}
-		
+
 		$shop_country = jigoshop_countries::get_base_country();
 		$my_country = ($shipable ? self::get_shipping_country() : self::get_country());
-		
+
 		$taxable = false;
 		if (jigoshop_countries::is_eu_country($shop_country)) {
 			$taxable = jigoshop_countries::is_eu_country($my_country);
@@ -75,7 +125,7 @@ class jigoshop_customer extends Jigoshop_Singleton {
 			$taxable = ($shop_country == $my_country);
 		}
 		// in order for a customer to be taxed, they have to be shipping to the taxing country
-		// or belong to that country. Also, if the shop is eu shop, then 
+		// or belong to that country. Also, if the shop is eu shop, then
 		return $taxable;
 	}
 
@@ -126,6 +176,43 @@ class jigoshop_customer extends Jigoshop_Singleton {
 		if ( self::get_customer_session('postcode')) return strtolower(str_replace(' ', '', self::get_customer_session('postcode')));
 	}
 
+	/** Checks for a customer requiring a state for a country that has states */
+	public static function has_valid_shipping_state() {
+		if ( self::get_customer_session('shipping_country')) {
+			if ( self::get_customer_session('shipping_state')) {
+				$states = jigoshop_countries::get_states( self::get_customer_session('shipping_country') );
+				if ( empty( $states ) ) {
+					return true;    /* there are no states for this country, states are not required */
+				} else if ( isset( $states[self::get_customer_session('shipping_state')] ) ) {
+					return false;    /* there are states and this one is valid, states are required */
+				} else {
+					return false;   /* there are states and no match from the session, states are required */
+				}
+			} else if ( jigoshop_countries::country_has_states( self::get_customer_session('shipping_country') ) ) {
+				return false;       /* states are required */
+			} else {
+				return true;        /* no session for state, no states for country, states are not required */
+			}
+		}
+		if ( self::get_customer_session('country'))	{
+			if ( self::get_customer_session('state')) {
+				$states = jigoshop_countries::get_states( self::get_customer_session('country') );
+				if ( empty( $states ) ) {
+					return true;    /* there are no states for this country, states are not required */
+				} else if ( isset( $states[self::get_customer_session('state')] ) ) {
+					return false;    /* there are states and this one is valid, states are required */
+				} else {
+					return false;   /* there are states and no match from the session, states are required */
+				}
+			} elseif ( jigoshop_countries::country_has_states( self::get_customer_session('country') ) ) {
+				return false;       /* states are required */
+			} else {
+				return true;        /* no session for state, no states for country, states are not required */
+			}
+		}
+		return false;               /* default to states are required */
+	}
+
 	/** Gets the state from the current session */
 	public static function get_shipping_state() {
 		if (self::get_customer_session('shipping_state')) return self::get_customer_session('shipping_state');
@@ -134,6 +221,17 @@ class jigoshop_customer extends Jigoshop_Singleton {
 	/** Gets the country from the current session */
 	public static function get_shipping_country() {
 		if (self::get_customer_session('shipping_country'))	return self::get_customer_session('shipping_country');
+	}
+
+	/** Gets the country and state from the current session for cart shipping display */
+	public static function get_shipping_country_or_state() {
+		if (self::get_customer_session('shipping_country'))	{
+			if (self::get_customer_session('shipping_state')) {
+				return isset(jigoshop_countries::$states[self::get_customer_session('shipping_country')][self::get_customer_session('shipping_state')]) ? jigoshop_countries::$states[self::get_customer_session('shipping_country')][self::get_customer_session('shipping_state')] : '';
+			} else {
+				return jigoshop_countries::$countries[self::get_customer_session('shipping_country')];
+			}
+		}
 	}
 
 	/** Gets the postcode from the current session */
@@ -244,7 +342,7 @@ class jigoshop_customer extends Jigoshop_Singleton {
 
 		endif;
 
-		return $downloads;
+		return apply_filters( 'jigoshop_downloadable_products', $downloads );
 
 	}
 
@@ -307,17 +405,24 @@ class jigoshop_customer extends Jigoshop_Singleton {
 		switch ($args['type']) :
 			case "country" :
 
-                //Remove 'Select a Country' option from drop-down menu for countries.
+				$current_c = self::get_value($args['name']);
+				$is_shipping_c = strpos($args['name'], 'shipping');
+				if (!$current_c) :
+					if ($is_shipping_c === false) $current_c = jigoshop_customer::get_country();
+					else $current_c = jigoshop_customer::get_shipping_country();
+				endif;
+
+                // Remove 'Select a Country' option from drop-down menu for countries.
                 // There is no need to have it, because was assume when user hasn't selected
                 // a country that they are from the shop base country.
                 $field = '<p class="form-row '.implode(' ', $args['class']).'">
                 <label for="'.esc_attr($args['name']).'" class="'.esc_attr(implode(' ', $args['label_class'])).'">'.$args['label'].$required.'</label>
                 <select name="'.esc_attr($args['name']).'" id="'.esc_attr($args['name']).'" class="country_to_state" rel="'.esc_attr($args['rel']).'">';
 
-				foreach(jigoshop_countries::get_allowed_countries() as $key=>$value) :
+				foreach (jigoshop_countries::get_allowed_countries() as $key=>$value) :
 					$field .= '<option value="'.esc_attr($key).'"';
 					if (self::get_value($args['name'])==$key) $field .= 'selected="selected"';
-					elseif (self::get_value($args['name']) && jigoshop_customer::get_country()==$key) $field .= 'selected="selected"';
+					elseif (self::get_value($args['name']) && $current_c==$key) $field .= 'selected="selected"';
 					$field .= '>'.__($value, 'jigoshop').'</option>';
 				endforeach;
 
@@ -328,11 +433,18 @@ class jigoshop_customer extends Jigoshop_Singleton {
 				$field = '<p class="form-row '.implode(' ', $args['class']).'">
 					<label for="' . esc_attr( $args['name'] ) . '" class="'.implode(' ', $args['label_class']).'">'.$args['label'].$required.'</label>';
 
+				$is_shipping_s = strpos($args['name'], 'shipping');
 				$current_cc = self::get_value($args['rel']);
-				if (!$current_cc) $current_cc = jigoshop_customer::get_country();
+				if (!$current_cc) :
+					if ($is_shipping_s === false) $current_cc = jigoshop_customer::get_country();
+					else $current_cc = jigoshop_customer::get_shipping_country();
+				endif;
 
 				$current_r = self::get_value($args['name']);
-				if (!$current_r) $current_r = jigoshop_customer::get_state();
+				if (!$current_r) :
+					if ($is_shipping_s === false) $current_r = jigoshop_customer::get_state();
+					else $current_r = jigoshop_customer::get_shipping_state();
+				endif;
 
 				$states = jigoshop_countries::get_states( $current_cc );
 
@@ -396,7 +508,7 @@ class jigoshop_customer extends Jigoshop_Singleton {
 			break;
 		endswitch;
 
-		apply_filters('jigoshop_address_field_types', $field, $args);
+		$field = apply_filters('jigoshop_address_field_types', $field, $args);
 
 		if ($args['return']) return $field; else echo $field;
 	}

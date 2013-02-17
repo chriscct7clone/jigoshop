@@ -1,6 +1,5 @@
-[Jigoshop](http://jigoshop.com)
+[Jigoshop](http://jigoshop.com)  [![Build Status](https://secure.travis-ci.org/jigoshop/jigoshop.png?branch=dev)](http://travis-ci.org/jigoshop/jigoshop)
 =================
-
 Jigoshop is a feature-packed eCommerce plugin built upon Wordpress core functionality ensuring excellent performance and customizability.
 
 Quick start
@@ -26,6 +25,8 @@ Have a bug? Please create an issue here on GitHub!
 https://github.com/jigoshop/jigoshop/issues
 
 Contributing
+------------
+See CONTRIBUTING.md
 ------------
 
 Anyone and everyone is welcome to contribute. Jigoshop wouldn't be what it is today without the github community.

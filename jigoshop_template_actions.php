@@ -56,7 +56,6 @@ add_action( 'jigoshop_template_single_summary', 'jigoshop_template_single_sharin
 /* Product Add to cart */
 add_action( 'jigoshop_template_single_summary', 'jigoshop_template_single_add_to_cart', 30, 2 );
 add_action( 'simple_add_to_cart'              , 'jigoshop_simple_add_to_cart' );
-add_action( 'external_add_to_cart'            , 'jigoshop_external_add_to_cart' );
 add_action( 'virtual_add_to_cart'             , 'jigoshop_simple_add_to_cart' );
 add_action( 'downloadable_add_to_cart'        , 'jigoshop_downloadable_add_to_cart' );
 add_action( 'grouped_add_to_cart'             , 'jigoshop_grouped_add_to_cart' );
@@ -83,6 +82,7 @@ add_action( 'jigoshop_product_tab_panels', 'jigoshop_product_customize_panel'  ,
 /* Checkout */
 add_action( 'before_checkout_form'          , 'jigoshop_checkout_login_form', 10 );
 add_action( 'jigoshop_checkout_order_review', 'jigoshop_order_review'       , 10 );
+add_action( 'jigoshop_review_order_after_submit', 'jigoshop_verify_checkout_states_for_countries_message' );
 
 /* Remove the singular class for jigoshop single product */
 add_action( 'after_setup_theme', 'jigoshop_body_classes_check' );

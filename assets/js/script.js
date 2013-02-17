@@ -117,12 +117,14 @@ jQuery(function() {
             }
             if (jQuery(state_box).is('input')) {
                 // Change for select
+        		jQuery(state_box).prev().append(' <span class="required">*</span>');
                 jQuery(state_box).replaceWith('<select name="' + input_name + '" id="' + input_id + '"><option value="">' + jigoshop_params.select_state_text + '</option></select>');
                 state_box = jQuery('#' + jQuery(this).attr('rel'));
             }
             jQuery(state_box).html(options);
         } else {
             if (jQuery(state_box).is('select')) {
+        		jQuery(state_box).prev().find('span.required').remove();
                 jQuery(state_box).replaceWith('<input class="input-text" type="text" placeholder="' + jigoshop_params.state_text + '" name="' + input_name + '" id="' + input_id + '" />');
                 state_box = jQuery('#' + jQuery(this).attr('rel'));
             }
@@ -224,7 +226,7 @@ jQuery(function() {
         	current_attr_select.find('option:gt(0)').attr('disabled', 'disabled');
 
         	// Get name
-	        var current_attr_name 	= current_attr_select.attr('name');
+	        var current_attr_name = current_attr_select.attr('name');
 
 	        // Loop through variations
 	        for(num in variations) {
@@ -242,6 +244,9 @@ jQuery(function() {
 	                }
 	            }
 	        }
+			
+			// completely re-enable the previous select so 'Choose an option' isn't required to change selections
+	        current_attr_select.parent().prev().find('select').find('option:gt(0)').removeAttr('disabled');
 
         });
 
@@ -363,6 +368,31 @@ jQuery(function() {
 		jQuery(item).data('num', i);
 	});
 
+	//default attributes
+	var initial_change = null; //which default attributes element trigger 
+	var current_attributes = {}; 
+	var number_of_variations = jQuery('form.variations_form .variations select').length;
+	jQuery('form.variations_form .variations select').each(function(i) {
+		current_attributes[jQuery(this).attr('name')] = jQuery(this).val();
+	   
+		if (jQuery(this).val() != '') {
+			//if default attribute is set remember it
+			if ( i == number_of_variations - 1 && find_matching_variations(current_attributes).length == 0) {
+				//if all default attributes are set, checks if any variation matches. 
+				// If not, break the loop and trigger one before last
+				return false;
+			}
+			initial_change = jQuery(this);
+		}
+		else {
+			//break loop if any of default attributes is not set
+			return false;
+		}
+	});
+	if (initial_change) {
+		initial_change.change();
+	}	
+	
 });
 
 if ( jigoshop_params.is_checkout ) {
@@ -479,9 +509,9 @@ if ( jigoshop_params.is_checkout ) {
 			clearTimeout(updateTimer);
 			update_checkout();
 		}).change();
-		jQuery('input#billing-country, input#billing-state, #billing-postcode, input#shipping-country, input#shipping-state, #shipping-postcode').live('keydown', function(){
+		jQuery('input#billing-country, input#billing-state, #billing-postcode, input#shipping-country, input#shipping-state, #shipping-postcode').live('change', function(){
 			clearTimeout(updateTimer);
-			updateTimer = setTimeout("update_checkout()", '5000');
+			update_checkout();
 		});
 		jQuery('select#billing-country, select#billing-state, select#shipping-country, select#shipping-state, #shiptobilling input').live('change', function(){
 			clearTimeout(updateTimer);

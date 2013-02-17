@@ -434,7 +434,7 @@ table.shop_attributes {
 /* =Buttons
 -------------------------------------------------------------- */
 a.button, button.button, input.button, #review_form #submit {
-	color: #fff !important;
+	color: #fff;
 	background: #ff9c07;
 	padding: 6px;
 	line-height: 1em !important;
@@ -461,7 +461,7 @@ a.button:hover, button.button:hover, input.button:hover, #review_form #submit:ho
 }
 
 .button-alt {
-	color: #fff !important;
+	color: #fff;
 	background: #069bcd;
 	padding: 6px;
 	line-height: 1em !important;
@@ -844,10 +844,12 @@ td.quantity, .jigoshop #content div.quantity {
 		text-align: right;
 		h2 {
 			text-align: left;
+			margin: 0;
 			margin-left: 10px;
 		}
 		p {
 			margin: 0 !important;
+			text-align: left;
 		}
 		table {
 			border-collapse: separate;
@@ -1290,4 +1292,59 @@ dl.customization {
 input:-ms-input-placeholder {
 	background: white;
 	color: LightGray;
+}
+
+/* =Twenty Twelve
+-------------------------------------------------------------- */
+
+.jigoshop .site-content {
+/*	width: 65.104166667%;  -- twenty-twelve default, not quite wide enough to have 4 columns on Shop */
+	width: 66%;
+}
+
+.jigoshop .site-content .cross-sells {
+	width: auto;
+}
+ 
+.jigoshop .site-content div.jigoshop_error, .jigoshop .site-content div.jigoshop_message {
+	padding: 15px 10px 15px 32px;
+ 
+	a.button {
+		margin-top: -4px;
+	}
+}
+
+.jigoshop .site-content input.qty {
+	border: 0;
+	border-radius: 0;
+}
+
+.jigoshop .site-content .quantity input.qty {
+	border:1px solid #ccc;
+	width:20px;
+	display: inline;
+	padding:1px 5px 2px;
+	line-height: 1em;
+	vertical-align: middle;
+}
+
+.jigoshop .site-content .quantity input.plus, .jigoshop .site-content .quantity input.minus {
+	padding: 5px 4px 4px 4px;
+	vertical-align: middle;
+	line-height: 1em;
+	border:none; width:20px;
+	color:#fff !important;
+	cursor: pointer;
+}
+
+.jigoshop .site-content .quantity input.minus { .border_radius_left(5px); .border_radius_right(0px); }
+.jigoshop .site-content .quantity input.plus { .border_radius_right(5px); .border_radius_left(0px); }
+.jigoshop .site-content .quantity input.minus:hover, .jigoshop .site-content .quantity input.plus:hover { background: rgba(169,193,70,1); }
+
+.site-content .cross-sells ul, .site-content .cross-sells li {
+	list-style: none outside !important;
+}
+
+.site-content .products ul, .site-content .products li {
+	list-style: none outside !important;
 }

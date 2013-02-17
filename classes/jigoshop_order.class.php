@@ -195,7 +195,7 @@ class jigoshop_order extends Jigoshop_Base {
 	}
 
 	/** Gets shipping and product tax */
-	function get_total_tax($with_currency = false) {
+	function get_total_tax($with_currency = false, $with_price_options = true) {
         $order_tax = 0;
 
         if ($this->get_tax_classes() && is_array($this->get_tax_classes())) :
@@ -209,8 +209,11 @@ class jigoshop_order extends Jigoshop_Base {
             endforeach;
 
         endif;
-
-        return jigoshop_price($order_tax, array('with_currency' => $with_currency));
+        
+		if ( $with_price_options )
+			return jigoshop_price($order_tax, array('with_currency' => $with_currency));
+		else
+			return number_format( (double)$order_tax, 2 );  // no formatting for pricing options for separators, use defaults
 	}
 
     public function get_tax_classes() {
@@ -252,7 +255,7 @@ class jigoshop_order extends Jigoshop_Base {
 
         $subtotal = jigoshop_price($this->order_subtotal);
 
-        if ($this->order_tax>0) :
+        if ($this->order_tax>0 && self::get_options()->get_option( 'jigoshop_calc_taxes' ) == 'yes') :
             $subtotal .= __(' <small>(ex. tax)</small>', 'jigoshop');
         endif;
 
@@ -372,7 +375,7 @@ class jigoshop_order extends Jigoshop_Base {
 					}
 
 					if ( $this->get_downloadable_file_url( $product_id ) )
-						$return .= PHP_EOL . 'Your download link for this file is:';
+						$return .= PHP_EOL . __('Your download link for this file is:', 'jigoshop');
 						$return .= PHP_EOL . ' - ' . $this->get_downloadable_file_url( $product_id ) . '';
 					endif;
 
@@ -466,7 +469,7 @@ class jigoshop_order extends Jigoshop_Base {
 // 			return true;
 // 		}
 
-		if ($note) $note .= ' ';
+		if ($note) $note .= ' - ';
 
 		$old_status = get_term_by( 'slug', sanitize_title( $this->status ), 'shop_order_status');
 		$new_status = get_term_by( 'slug', sanitize_title( $new_status_slug ), 'shop_order_status');
@@ -592,7 +595,7 @@ class jigoshop_order extends Jigoshop_Base {
 					$this->add_order_note( sprintf( __('Item #%s stock reduced from %s to %s.', 'jigoshop'), $item['id'], $old_stock, $new_quantity) );
 
 					if ($new_quantity<0) :
-						do_action('jigoshop_product_on_backorder_notification', $this->id, $item['id'], $item['qty']);
+						do_action('jigoshop_product_on_backorder_notification', $this->id, $_product, $item['qty']);
 					endif;
 
 					// stock status notifications
