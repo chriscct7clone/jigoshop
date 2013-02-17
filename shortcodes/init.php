@@ -22,17 +22,10 @@ include_once('pay.php');
 include_once('thankyou.php');
 
 function jigoshop_shortcode_wrapper( $function, $atts = array() ) {
-	$key = $function.'-shortcode-'.serialize($atts);
-	if ( $shortcode = wp_cache_get($key, 'jigoshop') )
-		return $shortcode;
-
-	// Get the shortcode & save in object cache
+	// WordPress caching of shortcodes stripped out in version 1.4.9 for compatibility with Cache plugins on Cart and Checkout
 	ob_start();
-	call_user_func($function, $atts);
-	$shortcode = ob_get_clean();
-	wp_cache_replace($key, $shortcode, 'jigoshop');
-
-	return $shortcode;
+	call_user_func( $function, $atts );
+	return ob_get_clean();
 }
 
 //### Recent Products #########################################################
@@ -378,8 +371,8 @@ function jigoshop_sale_products( $atts ) {
 		'pagination'                => false
 	), $atts));
 
-  	$today = date('Y-m-d',time());
-  	$tomorrow = date('Y-m-d',mktime(0, 0, 0, date("m"), date("d")+1, date("Y")) );
+  	$today = strtotime(date('Y-m-d',mktime(0, 0, 0, date("m"), date("d"), date("Y")) ));
+  	$tomorrow = strtotime(date('Y-m-d',mktime(0, 0, 0, date("m"), date("d")+1, date("Y")) ));
 
 	$args = array(
 		'post_type'                 => array( 'product' ),
@@ -402,17 +395,17 @@ function jigoshop_sale_products( $atts ) {
 				),
 				array(
 						'key'       => 'sale_price_dates_from',
-						'value'     => array( '', $today ),
+						'value'     => $today,
 						'compare'   => '<=',
 				),
 				array(
 						'key'       => 'sale_price_dates_to',
-						'value'     => array( '', $tomorrow ),
+						'value'     => $tomorrow,
 						'compare'   => '<=',
 				),
 		)
 	);
-	@query_posts($args);
+	query_posts($args);
 	ob_start();
 	jigoshop_get_template_part( 'loop', 'shop' );
 	if ( $pagination ) do_action( 'jigoshop_pagination' );

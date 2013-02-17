@@ -57,6 +57,18 @@ function jigoshop_upgrade() {
 		jigoshop_upgrade_130();
 	}
 
+	if ( $jigoshop_db_version < 1211190 ) {
+		jigoshop_upgrade_145();
+	}
+
+	if ( $jigoshop_db_version < 1211270 ) {
+		jigoshop_upgrade_146();
+	}
+
+ 	if ( $jigoshop_db_version < 1301280 ) {
+ 		jigoshop_upgrade_150();
+ 	}
+
 	// Update the db option
 	update_site_option( 'jigoshop_db_version', JIGOSHOP_VERSION );
 
@@ -574,4 +586,42 @@ function jigoshop_upgrade_130() {
 	
 	flush_rewrite_rules( true );
 
+}
+
+/**
+ * Execute changes made in Jigoshop 1.4.5
+ *
+ * @since 1.4.5
+ */
+function jigoshop_upgrade_145() {
+	
+	Jigoshop_Base::get_options()->delete_option( 'jigoshop_paypal_send_shipping' );
+	delete_option( 'jigoshop_paypal_send_shipping' );
+	Jigoshop_Base::get_options()->delete_option( 'jigoshop_display_totals_tax' );
+	delete_option( 'jigoshop_display_totals_tax' );
+	
+}
+
+/**
+ * Execute changes made in Jigoshop 1.4.6
+ *
+ * @since 1.4.6
+ */
+function jigoshop_upgrade_146() {
+	
+	Jigoshop_Base::get_options()->add_option( 'jigoshop_show_checkout_shipping_fields', 'yes' );
+	
+}
+
+/**
+ * Execute changes made in Jigoshop 1.5
+ *
+ * @since 1.5
+ */
+function jigoshop_upgrade_150() {
+	
+	Jigoshop_Base::get_options()->add_option( 'jigoshop_cart_shows_shop_button', 'no' );
+	Jigoshop_Base::get_options()->add_option( 'jigoshop_enable_postcode_validating', 'no' );
+	Jigoshop_Base::get_options()->add_option( 'jigoshop_product_thumbnail_columns', '3' );
+	
 }
